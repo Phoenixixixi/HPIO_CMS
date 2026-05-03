@@ -60,10 +60,13 @@ class LandingContentController extends Controller
 
         $path = $request->file('image')->store('landing', 'public');
         
-        LandingContent::updateOrCreate(
-            ['key' => $request->key],
-            ['value' => Storage::url($path), 'type' => 'image']
-        );
+        // Only update database if key is not 'generic'
+        if ($request->key !== 'generic') {
+            LandingContent::updateOrCreate(
+                ['key' => $request->key],
+                ['value' => Storage::url($path), 'type' => 'image']
+            );
+        }
 
         return response()->json(['url' => Storage::url($path)]);
     }

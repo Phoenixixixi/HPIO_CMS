@@ -57,7 +57,7 @@ export default function InternTracking({ interns }: Props) {
     const [editingIntern, setEditingIntern] = useState<InternBatch | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const { data, setData, post, delete: destroy, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, put, transform, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         Batch: '',
         start_date: '',
         end_date: '',
@@ -95,14 +95,20 @@ export default function InternTracking({ interns }: Props) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (editingIntern) {
             // Laravel handles multipart/form-data best with POST + _method: PUT
+            transform((data) => ({
+                ...data,
+                _method: 'put',
+            }));
+
             post(route('track-interns.update', editingIntern.id), {
                 forceFormData: true,
                 onSuccess: () => {
                     setIsDialogOpen(false);
                     reset();
+                    setEditingIntern(null);
                 },
             });
         } else {
@@ -138,7 +144,7 @@ export default function InternTracking({ interns }: Props) {
         setData('members', newMembers);
     };
 
-    const filteredInterns = interns.filter(intern => 
+    const filteredInterns = interns.filter(intern =>
         intern.Batch.toLowerCase().includes(searchQuery.toLowerCase()) ||
         intern.achievement_title.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -278,119 +284,119 @@ export default function InternTracking({ interns }: Props) {
                             <div className="grid gap-2">
                                 <Label htmlFor="start_date">Start Date</Label>
                                 <Input id="start_date" value={data.start_date} onChange={e => setData('start_date', e.target.value)} placeholder="e.g. Feb 2024" />
-                                {errors.start_date && <p className="text-xs text-destructive">{errors.start_date}</p>}
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="end_date">End Date</Label>
-                                <Input id="end_date" value={data.end_date} onChange={e => setData('end_date', e.target.value)} placeholder="e.g. Jun 2024" />
-                                {errors.end_date && <p className="text-xs text-destructive">{errors.end_date}</p>}
-                            </div>
+                                e && <p className="text-xs text-destructive">{errors.start_date}</p>}
+                            </div>                                {errors.start_dat
+                                < div className="grid gap-2">
+                            <Label htmlFor="end_date">End Date</Label>
+                            <Input id="end_date" value={data.end_date} onChange={e => setData('end_date', e.target.value)} placeholder="e.g. Jun 2024" />
+                            {errors.end_date && <p className="text-xs text-destructive">{errors.end_date}</p>}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="achievement_title">Achievement Title</Label>
+                            <Input id="achievement_title" value={data.achievement_title} onChange={e => setData('achievement_title', e.target.value)} placeholder="e.g. Best IT Support Team" />
+                            {errors.achievement_title && <p className="text-xs text-destructive">{errors.achievement_title}</p>}
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="achievement_description">Achievement Description</Label>
+                            <textarea
+                                id="achievement_description"
+                                className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                value={data.achievement_description}
+                                onChange={e => setData('achievement_description', e.target.value)}
+                                placeholder="Briefly describe what this batch achieved..."
+                            />
+                            {errors.achievement_description && <p className="text-xs text-destructive">{errors.achievement_description}</p>}
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold">Team Members</h3>
+                            <Button type="button" variant="outline" size="sm" onClick={addMember} className="gap-1">
+                                <Plus className="h-4 w-4" />
+                                Add Member
+                            </Button>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="achievement_title">Achievement Title</Label>
-                                <Input id="achievement_title" value={data.achievement_title} onChange={e => setData('achievement_title', e.target.value)} placeholder="e.g. Best IT Support Team" />
-                                {errors.achievement_title && <p className="text-xs text-destructive">{errors.achievement_title}</p>}
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="achievement_description">Achievement Description</Label>
-                                <textarea
-                                    id="achievement_description"
-                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                    value={data.achievement_description}
-                                    onChange={e => setData('achievement_description', e.target.value)}
-                                    placeholder="Briefly describe what this batch achieved..."
-                                />
-                                {errors.achievement_description && <p className="text-xs text-destructive">{errors.achievement_description}</p>}
-                            </div>
-                        </div>
-
-                        <Separator />
-
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-bold">Team Members</h3>
-                                <Button type="button" variant="outline" size="sm" onClick={addMember} className="gap-1">
-                                    <Plus className="h-4 w-4" />
-                                    Add Member
+                        {data.members.map((member, index) => (
+                            <Card key={index} className="relative pt-6">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-7 w-7 text-destructive hover:bg-destructive/10"
+                                    onClick={() => removeMember(index)}
+                                    disabled={data.members.length === 1}
+                                >
+                                    <X className="h-4 w-4" />
                                 </Button>
-                            </div>
-
-                            {data.members.map((member, index) => (
-                                <Card key={index} className="relative pt-6">
-                                    <Button 
-                                        type="button" 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="absolute top-2 right-2 h-7 w-7 text-destructive hover:bg-destructive/10" 
-                                        onClick={() => removeMember(index)}
-                                        disabled={data.members.length === 1}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-4">
-                                            <div className="grid gap-2">
-                                                <Label>Full Name</Label>
-                                                <Input value={member.name} onChange={e => updateMember(index, 'name', e.target.value)} />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label>NIM / Student ID</Label>
-                                                <Input value={member.nim} onChange={e => updateMember(index, 'nim', e.target.value)} />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label>Major</Label>
-                                                <Input value={member.major} onChange={e => updateMember(index, 'major', e.target.value)} />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label>University</Label>
-                                                <Input value={member.university} onChange={e => updateMember(index, 'university', e.target.value)} />
-                                            </div>
+                                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-4">
+                                        <div className="grid gap-2">
+                                            <Label>Full Name</Label>
+                                            <Input value={member.name} onChange={e => updateMember(index, 'name', e.target.value)} />
                                         </div>
-                                        <div className="space-y-4">
-                                            <div className="grid gap-2">
-                                                <Label>Work Place (Assigned)</Label>
-                                                <Input value={member.work_place} onChange={e => updateMember(index, 'work_place', e.target.value)} />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label>Job Desk</Label>
-                                                <Input value={member.job_desk} onChange={e => updateMember(index, 'job_desk', e.target.value)} />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label>Profile Picture</Label>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center overflow-hidden border shrink-0">
-                                                        {member.image instanceof File ? (
-                                                            <img src={URL.createObjectURL(member.image)} className="h-full w-full object-cover" />
-                                                        ) : (typeof member.image === 'string' ? (
-                                                            <img src={`/storage/${member.image}`} className="h-full w-full object-cover" />
-                                                        ) : (
-                                                            <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                                                        ))}
-                                                    </div>
-                                                    <Input 
-                                                        type="file" 
-                                                        accept="image/*" 
-                                                        className="text-xs" 
-                                                        onChange={e => updateMember(index, 'image', e.target.files?.[0] || null)}
-                                                    />
+                                        <div className="grid gap-2">
+                                            <Label>NIM / Student ID</Label>
+                                            <Input value={member.nim} onChange={e => updateMember(index, 'nim', e.target.value)} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Major</Label>
+                                            <Input value={member.major} onChange={e => updateMember(index, 'major', e.target.value)} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>University</Label>
+                                            <Input value={member.university} onChange={e => updateMember(index, 'university', e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="grid gap-2">
+                                            <Label>Work Place (Assigned)</Label>
+                                            <Input value={member.work_place} onChange={e => updateMember(index, 'work_place', e.target.value)} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Job Desk</Label>
+                                            <Input value={member.job_desk} onChange={e => updateMember(index, 'job_desk', e.target.value)} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Profile Picture</Label>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center overflow-hidden border shrink-0">
+                                                    {member.image instanceof File ? (
+                                                        <img src={URL.createObjectURL(member.image)} className="h-full w-full object-cover" />
+                                                    ) : (typeof member.image === 'string' ? (
+                                                        <img src={`/storage/${member.image}`} className="h-full w-full object-cover" />
+                                                    ) : (
+                                                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                                    ))}
                                                 </div>
+                                                <Input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="text-xs"
+                                                    onChange={e => updateMember(index, 'image', e.target.files?.[0] || null)}
+                                                />
                                             </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                            {errors.members && <p className="text-sm text-destructive">{errors.members}</p>}
-                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                        {errors.members && <p className="text-sm text-destructive">{errors.members}</p>}
+                    </div>
 
-                        <DialogFooter className="sticky bottom-0 bg-background pt-4 border-t">
-                            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                            <Button type="submit" disabled={processing}>{editingIntern ? 'Update Batch' : 'Create Batch'}</Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-        </AppLayout>
+                    <DialogFooter className="sticky bottom-0 bg-background pt-4 border-t">
+                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                        <Button type="submit" disabled={processing}>{editingIntern ? 'Update Batch' : 'Create Batch'}</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+        </AppLayout >
     );
 }

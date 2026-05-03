@@ -33,9 +33,10 @@ export default function LandingContentPage({ contents }: Props) {
             hero_cta_secondary: contents.hero_cta_secondary || 'Pelajari Lebih Lanjut',
 
             about_title: contents.about_title || 'About Us',
+            about_description: contents.about_description || 'HPIO (High Performance Information Operations) is dedicated to maintaining the excellence of IT systems for the Jakarta-Bandung High-Speed Railway.',
             about_image: contents.about_image || 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070&auto=format&fit=crop',
-            about_items: Array.isArray(contents.about_items) 
-                ? contents.about_items 
+            about_items: Array.isArray(contents.about_items)
+                ? contents.about_items
                 : (typeof contents.about_items === 'string' ? JSON.parse(contents.about_items) : [
                     { heading: 'Our Mission', description: 'HPIO serves as the critical nervous system of PT KCIC...' },
                     { heading: 'Our Vision', description: 'Our operational mandate focuses on proactive monitoring...' }
@@ -138,7 +139,7 @@ export default function LandingContentPage({ contents }: Props) {
                         <TabButton id="hero" label="Hero Section" active={activeTab} onClick={setActiveTab} />
                         <TabButton id="about" label="About Section" active={activeTab} onClick={setActiveTab} />
                         <TabButton id="services" label="Services" active={activeTab} onClick={setActiveTab} />
-                        <TabButton id="works" label="Works" active={activeTab} onClick={setActiveTab} />
+
                     </div>
 
                     {/* Content Area */}
@@ -204,6 +205,16 @@ export default function LandingContentPage({ contents }: Props) {
                                                 id="about_title"
                                                 value={data.contents.about_title}
                                                 onChange={(e) => updateContent('about_title', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="about_description">Description</Label>
+                                            <textarea
+                                                id="about_description"
+                                                className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                value={data.contents.about_description}
+                                                onChange={(e) => updateContent('about_description', e.target.value)}
                                             />
                                         </div>
 
@@ -471,7 +482,7 @@ export default function LandingContentPage({ contents }: Props) {
                                 </Card>
                             )}
 
-                            {activeTab === 'works' && (
+                            {/* {activeTab === 'works' && (
                                 <Card>
                                     <CardHeader>
                                         <CardTitle>Works Section</CardTitle>
@@ -556,16 +567,67 @@ export default function LandingContentPage({ contents }: Props) {
                                                                 />
                                                             </div>
                                                             <div className="grid gap-2">
-                                                                <Label>Image URLs (One per line)</Label>
-                                                                <textarea
-                                                                    className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm font-mono shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                                                    value={Array.isArray(item.images) ? item.images.join('\n') : item.images}
-                                                                    onChange={(e) => {
-                                                                        const newItems = [...data.contents.works_items];
-                                                                        newItems[index].images = e.target.value.split('\n').filter(Boolean);
-                                                                        updateContent('works_items', newItems);
-                                                                    }}
-                                                                />
+                                                                <Label>Project Images</Label>
+                                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                                    {(Array.isArray(item.images) ? item.images : []).map((imgUrl: string, imgIndex: number) => (
+                                                                        <div key={imgIndex} className="relative aspect-square rounded-md border bg-muted overflow-hidden group">
+                                                                            <img src={imgUrl} className="h-full w-full object-cover" />
+                                                                            <button
+                                                                                type="button"
+                                                                                className="absolute top-1 right-1 p-1.5 bg-destructive text-destructive-foreground rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                                onClick={() => {
+                                                                                    const newItems = [...data.contents.works_items];
+                                                                                    newItems[index].images = item.images.filter((_: any, i: number) => i !== imgIndex);
+                                                                                    updateContent('works_items', newItems);
+                                                                                }}
+                                                                            >
+                                                                                <Trash2 className="h-3 w-3" />
+                                                                            </button>
+                                                                        </div>
+                                                                    ))}
+                                                                    {(!item.images || item.images.length < 4) && (
+                                                                        <div 
+                                                                            className="flex aspect-square items-center justify-center rounded-md border border-dashed hover:bg-muted/50 transition-colors cursor-pointer"
+                                                                            onClick={() => document.getElementById(`work-img-upload-${index}`)?.click()}
+                                                                        >
+                                                                            <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                                                                                <Upload className="h-5 w-5" />
+                                                                                <span className="text-xs">Upload</span>
+                                                                            </div>
+                                                                            <input
+                                                                                id={`work-img-upload-${index}`}
+                                                                                type="file"
+                                                                                className="hidden"
+                                                                                accept="image/*"
+                                                                                onChange={async (e) => {
+                                                                                    const file = e.target.files?.[0];
+                                                                                    if (file) {
+                                                                                        const formData = new FormData();
+                                                                                        formData.append('image', file);
+                                                                                        formData.append('key', 'generic');
+                                                                                        try {
+                                                                                            const response = await fetch(route('landing.content.upload'), {
+                                                                                                method: 'POST',
+                                                                                                body: formData,
+                                                                                                headers: {
+                                                                                                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+                                                                                                },
+                                                                                            });
+                                                                                            const result = await response.json();
+                                                                                            if (result.url) {
+                                                                                                const newItems = [...data.contents.works_items];
+                                                                                                newItems[index].images = [...(Array.isArray(item.images) ? item.images : []), result.url];
+                                                                                                updateContent('works_items', newItems);
+                                                                                            }
+                                                                                        } catch (error) {
+                                                                                            console.error('Upload failed:', error);
+                                                                                        }
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -574,7 +636,7 @@ export default function LandingContentPage({ contents }: Props) {
                                         </div>
                                     </CardContent>
                                 </Card>
-                            )}
+                            )} */}
                         </form>
                     </div>
                 </div>

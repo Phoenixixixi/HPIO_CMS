@@ -57,7 +57,7 @@ export default function Works({ works }: Props) {
     const [editingWork, setEditingWork] = useState<Work | null>(null);
     const [deletedImages, setDeletedImages] = useState<number[]>([]);
 
-    const { data, setData, post, delete: destroy, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, transform, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         title: '',
         description: '',
         images: [] as File[],
@@ -91,6 +91,11 @@ export default function Works({ works }: Props) {
         deletedImages.forEach((id, index) => {
             formData.append(`deleted_images[${index}]`, id.toString());
         });
+
+        transform((data) => ({
+            ...data,
+            _method: 'put',
+        }));
 
         post(route('works.update', editingWork.id), {
             forceFormData: true,
@@ -133,77 +138,80 @@ export default function Works({ works }: Props) {
             <Head title="Works Management" />
 
             <div className="flex h-full flex-1 flex-col gap-6 p-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Works Portfolio</h1>
-                        <p className="text-muted-foreground mt-1">Manage your projects, accomplishments, and operational results.</p>
+                <div className="flex flex-col gap-8">
+                    <div className='flex justify-between items-center'>
+                        <div className=''>
+                            <h1 className="text-3xl font-bold tracking-tight">Works Portfolio</h1>
+                            <p className="text-muted-foreground mt-1">Manage your projects, accomplishments, and operational results.</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" asChild className="gap-2">
+                                <Link href="/preview">
+                                    <Eye className="h-4 w-4" />
+                                    View Preview
+                                </Link>
+                            </Button>
+                            <Dialog open={isCreateOpen} onOpenChange={(open) => {
+                                setIsCreateOpen(open);
+                                if (!open) {
+                                    reset();
+                                    clearErrors();
+                                }
+                            }}>
+                                <DialogTrigger asChild>
+                                    <Button className="gap-2">
+                                        <Plus className="h-4 w-4" />
+                                        Add Work
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[600px]">
+                                    <form onSubmit={handleCreate}>
+                                        <DialogHeader>
+                                            <DialogTitle>Create New Work</DialogTitle>
+                                            <DialogDescription>
+                                                Add a new project or operational result with up to 4 images.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="title">Title</Label>
+                                                <Input id="title" value={data.title} onChange={e => setData('title', e.target.value)} placeholder="e.g. Rapid Troubleshooting" />
+                                                {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="description">Description</Label>
+                                                <textarea
+                                                    id="description"
+                                                    className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                    value={data.description}
+                                                    onChange={e => setData('description', e.target.value)}
+                                                    placeholder="Detailed description of the work..."
+                                                />
+                                                {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="images">Images (Max 4)</Label>
+                                                <Input
+                                                    id="images"
+                                                    type="file"
+                                                    multiple
+                                                    accept="image/*"
+                                                    onChange={e => setData('images', e.target.files ? Array.from(e.target.files) : [])}
+                                                />
+                                                <p className="text-xs text-muted-foreground">Select up to 4 images. Only the first 4 will be saved.</p>
+                                                {errors.images && <p className="text-sm text-red-500">{errors.images}</p>}
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button type="submit" disabled={processing}>Save Work</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
                     </div>
 
-                    <div className="flex gap-2">
-                        <Button variant="outline" asChild className="gap-2">
-                            <Link href="/preview">
-                                <Eye className="h-4 w-4" />
-                                View Preview
-                            </Link>
-                        </Button>
-                        <Dialog open={isCreateOpen} onOpenChange={(open) => {
-                            setIsCreateOpen(open);
-                            if (!open) {
-                                reset();
-                                clearErrors();
-                            }
-                        }}>
-                            <DialogTrigger asChild>
-                                <Button className="gap-2">
-                                    <Plus className="h-4 w-4" />
-                                    Add Work
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[600px]">
-                                <form onSubmit={handleCreate}>
-                                    <DialogHeader>
-                                        <DialogTitle>Create New Work</DialogTitle>
-                                        <DialogDescription>
-                                            Add a new project or operational result with up to 4 images.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4 py-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="title">Title</Label>
-                                            <Input id="title" value={data.title} onChange={e => setData('title', e.target.value)} placeholder="e.g. Rapid Troubleshooting" />
-                                            {errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="description">Description</Label>
-                                            <textarea
-                                                id="description"
-                                                className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                                value={data.description}
-                                                onChange={e => setData('description', e.target.value)}
-                                                placeholder="Detailed description of the work..."
-                                            />
-                                            {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="images">Images (Max 4)</Label>
-                                            <Input
-                                                id="images"
-                                                type="file"
-                                                multiple
-                                                accept="image/*"
-                                                onChange={e => setData('images', e.target.files ? Array.from(e.target.files) : [])}
-                                            />
-                                            <p className="text-xs text-muted-foreground">Select up to 4 images. Only the first 4 will be saved.</p>
-                                            {errors.images && <p className="text-sm text-red-500">{errors.images}</p>}
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button type="submit" disabled={processing}>Save Work</Button>
-                                    </DialogFooter>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
+
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {works.length > 0 ? works.map((work) => (

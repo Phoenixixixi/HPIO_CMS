@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id');
             $table->string('nama');
             $table->string('status');
-            $table->string('description_profile');
-            $table->string('foto_profile');
+            $table->string('description_profile')->nullable();
+            $table->string('foto_profile')->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

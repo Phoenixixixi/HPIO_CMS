@@ -65,6 +65,7 @@ export default function Structure() {
         foto_profile: null as File | null,
         team: 'internal',
         role: 'Manager',
+        _method: 'POST',
     });
 
     const handleCreate = (e: React.FormEvent) => {
@@ -80,19 +81,6 @@ export default function Structure() {
     const handleEdit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingUser) return;
-
-        // Since we are uploading a file, we use post with _method: 'PUT' or just use post if backend handles it
-        // Inertia doesn't support multipart/form-data with PUT easily, so we use post with _method spoofing
-        const formData = new FormData();
-        formData.append('_method', 'PUT');
-        formData.append('name', data.name);
-        formData.append('email', data.email);
-        if (data.password) formData.append('password', data.password);
-        formData.append('status', data.status);
-        formData.append('description_profile', data.description_profile);
-        formData.append('team', data.team);
-        formData.append('role', data.role);
-        if (data.foto_profile) formData.append('foto_profile', data.foto_profile);
 
         post(route('users.update', editingUser.id), {
             forceFormData: true,
@@ -115,6 +103,7 @@ export default function Structure() {
             foto_profile: null,
             team: user.users_profile?.team || 'internal',
             role: user.users_profile?.role || 'Manager',
+            _method: 'PUT',
         });
         setIsEditOpen(true);
     };

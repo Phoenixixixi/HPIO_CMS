@@ -67,7 +67,7 @@ export default function Stories({ stories, contents }: Props) {
     });
 
     // Form for individual story items
-    const { data, setData, post, delete: destroy, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, transform, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         title: '',
         desc: '',
         time: '',
@@ -94,19 +94,11 @@ export default function Stories({ stories, contents }: Props) {
         e.preventDefault();
         if (!editingStory) return;
 
-        const formData = new FormData();
-        formData.append('_method', 'PUT');
-        formData.append('title', data.title);
-        formData.append('desc', data.desc);
-        formData.append('time', data.time);
-
-        data.images.forEach((file, index) => {
-            formData.append(`images[${index}]`, file);
-        });
-
-        deletedImages.forEach((id, index) => {
-            formData.append(`deleted_images[${index}]`, id.toString());
-        });
+        transform((data) => ({
+            ...data,
+            _method: 'PUT',
+            deleted_images: deletedImages,
+        }));
 
         post(route('stories.update', editingStory.id), {
             forceFormData: true,

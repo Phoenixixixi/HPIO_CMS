@@ -6,7 +6,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return redirect()->route('dashboard');
 })->name('home');
 
 use App\Http\Controllers\LandingContentController;
