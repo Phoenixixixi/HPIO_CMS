@@ -30,18 +30,18 @@ export default function Preview() {
                 <div className="flex items-center justify-between p-4 border-b bg-card shrink-0">
                     <div className="flex items-center gap-4">
                         <div className="flex items-center bg-muted rounded-lg p-1">
-                            <Button 
-                                variant={viewMode === 'desktop' ? 'secondary' : 'ghost'} 
-                                size="sm" 
+                            <Button
+                                variant={viewMode === 'desktop' ? 'secondary' : 'ghost'}
+                                size="sm"
                                 className="h-8 gap-2"
                                 onClick={() => setViewMode('desktop')}
                             >
                                 <Monitor className="h-4 w-4" />
                                 <span className="hidden sm:inline">Desktop</span>
                             </Button>
-                            <Button 
-                                variant={viewMode === 'mobile' ? 'secondary' : 'ghost'} 
-                                size="sm" 
+                            <Button
+                                variant={viewMode === 'mobile' ? 'secondary' : 'ghost'}
+                                size="sm"
                                 className="h-8 gap-2"
                                 onClick={() => setViewMode('mobile')}
                             >
@@ -70,14 +70,13 @@ export default function Preview() {
 
                 {/* Iframe Container */}
                 <div className="flex-1 bg-zinc-100 dark:bg-zinc-950 p-4 overflow-auto flex justify-center">
-                    <div 
-                        className={`transition-all duration-500 ease-in-out h-full shadow-2xl border bg-white overflow-hidden rounded-xl ${
-                            viewMode === 'desktop' ? 'w-full' : 'w-[375px]'
-                        }`}
+                    <div
+                        className={`transition-all duration-500 ease-in-out h-full shadow-2xl border bg-white overflow-hidden rounded-xl ${viewMode === 'desktop' ? 'w-full' : 'w-[375px]'
+                            }`}
                     >
-                        <iframe 
+                        <iframe
                             key={iframeKey}
-                            src="http://localhost:3000" 
+                            src="https://kcic.online"
                             className="w-full h-full border-none"
                             title="Landing Page Preview"
                         />
